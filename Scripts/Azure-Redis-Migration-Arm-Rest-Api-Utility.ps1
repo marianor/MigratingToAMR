@@ -25,6 +25,8 @@
     Initiates a migration and tracks its progress.
     .\Azure-Redis-Migration-Arm-Rest-Api-Utility.ps1 -Action Migrate -SourceResourceId "/subscriptions/xxxxx/resourceGroups/rg1/providers/Microsoft.Cache/Redis/redis1" -TargetResourceId "/subscriptions/xxxxx/resourceGroups/rg1/providers/Microsoft.Cache/redisEnterprise/amr1" -ForceMigrate $true
     Initiates a migration and forces migration when parity validation returns warnings.
+    .\Azure-Redis-Migration-Arm-Rest-Api-Utility.ps1 -Action Validate -SourceResourceId "/subscriptions/xxxxx/resourceGroups/rg1/providers/Microsoft.Cache/Redis/redis1" -TargetResourceId "/subscriptions/xxxxx/resourceGroups/rg1/providers/Microsoft.Cache/redisEnterprise/amr1"
+    Validates whether a migration can be performed between the source and target caches.
     .\Azure-Redis-Migration-Arm-Rest-Api-Utility.ps1 -Action Status -TargetResourceId "/subscriptions/xxxxx/resourceGroups/rg1/providers/Microsoft.Cache/redisEnterprise/amr1"
     Checks the status of the migration.
     .\Azure-Redis-Migration-Arm-Rest-Api-Utility.ps1 -Action Cancel -TargetResourceId "/subscriptions/xxxxx/resourceGroups/rg1/providers/Microsoft.Cache/redisEnterprise/amr1"
@@ -37,7 +39,7 @@
 param
 (
     [Parameter()]
-    [ValidateSet("Migrate", "Status", "Cancel")]
+    [ValidateSet("Migrate", "Validate", "Status", "Cancel")]
     [string] $Action,
 
     [Parameter()]
@@ -226,8 +228,28 @@ switch ($Action)
         break
     }
 
+    "Validate"
+    {
+        $payload = @{
+            properties = @{
+                sourceResourceId  = $SourceResourceId;
+                skipDataMigration = $true;
+            };
+        } | ConvertTo-Json -Depth 3
+
+        Write-Host "This command will validate whether a migration can be performed between the source and target caches."
+        $response = Invoke-AzRestMethod `
+            -Method POST `
+            -Path "/subscriptions/$SubscriptionId/resourceGroups/$ResourceGroupName/providers/Microsoft.Cache/RedisEnterprise/$AmrCacheName/migrations/default/validate?api-version=$ArmApiVersion" `
+            -Payload $payload
+
+        Print-Response $response
+
+        break
+    }
+
     Default
     {
-        throw "Invalid action specified. Please use one of the following: 'Migrate', 'Status', 'Cancel'."
+        throw "Invalid action specified. Please use one of the following: 'Migrate', 'Validate', 'Status', 'Cancel'."
     }
 }
