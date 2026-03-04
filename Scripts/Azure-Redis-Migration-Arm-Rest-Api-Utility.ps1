@@ -15,7 +15,7 @@
 .PARAMETER Environment
     The Azure environment to use (default is the public "AzureCloud").
 .PARAMETER TrackMigration
-    If set, the script waits for the migration operation to complete (default is $false).
+    If set, the script will wait for the migration operation to complete (default is $false).
 .PARAMETER Verbose
     If set, the script will output detailed information about its operations (default is $false).
 .PARAMETER Help
